@@ -75,9 +75,9 @@ function App() {
 						<small className="theme-text">theme</small>
 						<div className="theme-options">
 							<div className="theme-labels">
-								<label>1</label>
-								<label>2</label>
-								<label>3</label>
+								<label onClick={() => setTheme("theme-1")}>1</label>
+								<label onClick={() => setTheme("theme-2")}>2</label>
+								<label onClick={() => setTheme("theme-3")}>3</label>
 							</div>
 							<div className={`theme-switchs ${theme}-theme-switchs`}>
 								<div

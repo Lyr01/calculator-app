@@ -2,69 +2,82 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
-	const [result, setReuslt] = useState("");
-	const [calc, setCalc] = useState("");
-	const [overWrite, setOverWrite] = useState(false);
 	const [theme, setTheme] = useState("theme-1");
+	const [result, setResult] = useState<string>("");
+	const [number, setNumber] = useState<string>("");
+	const [prevFullNumber, setPrevFullNumber] = useState<string>("");
+	const [operator, setOperator] = useState<string>("");
 
-	const operators = ["+", "-", "*", "/", "."];
+	const updateDigit = (num: string) => {
+		if (number.includes(".") && num === ".") return;
+		let completeNum = number + "" + num;
+		setNumber(completeNum);
+	};
 
-	const updateCalc = (value: string) => {
-		if (
-			(operators.includes(value) && calc === "") ||
-			(operators.includes(value) && operators.includes(calc.slice(-1))) ||
-			(value === "." && calc.includes(".")) ||
-			calc.length >= 24
-		) {
-			return;
-		}
-
-		setCalc(calc + value);
-
-		if (!operators.includes(value)) {
-			setReuslt(eval(calc + value).toString());
-		}
-
-		if (overWrite) {
-			if (
-				(operators.includes(value) && operators.includes(calc.slice(-1))) ||
-				(value === "." && calc.includes("."))
-			) {
-				return;
-			}
-			setCalc(calc + value);
-			setReuslt(calc + value);
-			setOverWrite(false);
-		}
+	const updateOperator = (op: string) => {
+		if (number === "" && result === "" && prevFullNumber === "") return;
+		calculate();
+		setOperator(op);
+		setPrevFullNumber(number);
+		setNumber("");
 	};
 
 	const calculate = () => {
-		if (calc === "" || operators.includes(calc.slice(-1))) return;
+		if (result === "") {
+			operator === "+"
+				? setResult((Number(prevFullNumber) + Number(number)).toString())
+				: null;
 
-		setOverWrite(true);
-		const evaluation = eval(calc).toString();
-		const [integer, float] = evaluation.split(".");
-		const formatNumber =
-			new Intl.NumberFormat("en").format(Number(integer)) +
-			(float ? "." + float : "");
-		setCalc(formatNumber);
-		setReuslt("");
+			operator === "-"
+				? setResult((Number(prevFullNumber) - Number(number)).toString())
+				: null;
+			operator === "*"
+				? setResult(
+						(Number(prevFullNumber) * Number(number ? number : 1)).toString()
+				  )
+				: null;
+			operator === "/"
+				? setResult(
+						(Number(prevFullNumber) / Number(number ? number : 1)).toString()
+				  )
+				: null;
+		} else {
+			operator === "+"
+				? setResult((Number(result) + Number(number)).toString())
+				: null;
+			operator === "-"
+				? setResult((Number(result) - Number(number)).toString())
+				: null;
+			operator === "*"
+				? setResult((Number(result) * Number(number ? number : 1)).toString())
+				: null;
+			operator === "/"
+				? setResult((Number(result) / Number(number ? number : 1)).toString())
+				: null;
+		}
 	};
 
-	const deleteLast = () => {
-		if (calc === "") {
-			return;
-		}
-
-		const value = calc.slice(0, -1);
-		setCalc(value);
-		setReuslt(value);
+	const equal = () => {
+		setNumber("");
+		calculate();
 	};
 
 	const reset = () => {
-		setCalc("");
-		setReuslt("");
+		setNumber("");
+		setResult("");
+		setOperator("");
+		setPrevFullNumber("");
 	};
+
+	const INTEGER_FORMATTER = new Intl.NumberFormat("en-us", {
+		maximumFractionDigits: 0,
+	});
+	function formatOperand(operand: string) {
+		if (operand == null) return;
+		const [integer, decimal] = operand.split(".");
+		if (decimal == null) return INTEGER_FORMATTER.format(Number(integer));
+		return `${INTEGER_FORMATTER.format(Number(integer))}.${Number(decimal)}`;
+	}
 
 	return (
 		<main className={`App ${theme}-App`}>
@@ -106,46 +119,50 @@ function App() {
 					</div>
 				</div>
 				<div className={`display-container ${theme}-display-container`}>
-					{result ? <span>({result})</span> : <span>&nbsp;</span>}
-					<h1>{calc || 0}</h1>
+					<small>
+						{result
+							? formatOperand(result) + "" + operator
+							: formatOperand(prevFullNumber) + "" + operator || "0"}
+					</small>
+					<h1>{number ? formatOperand(number) : formatOperand(result) || 0}</h1>
 				</div>
 				<div className={`calculator ${theme}-calculator`}>
-					<button onClick={() => updateCalc("7")}>7</button>
-					<button onClick={() => updateCalc("8")}>8</button>
-					<button onClick={() => updateCalc("9")}>9</button>
-					<button className={`${theme}-btn-delete`} onClick={deleteLast}>
+					<button onClick={() => updateDigit("7")}>7</button>
+					<button onClick={() => updateDigit("8")}>8</button>
+					<button onClick={() => updateDigit("9")}>9</button>
+					<button
+						className={`${theme}-btn-delete`}
+						onClick={() => setNumber(number.slice(0, -1))}
+					>
 						del
 					</button>
-					<button onClick={() => updateCalc("4")}>4</button>
-					<button onClick={() => updateCalc("5")}>5</button>
-					<button onClick={() => updateCalc("6")}>6</button>
-					<button onClick={() => updateCalc("+")}>+</button>
-					<button onClick={() => updateCalc("1")}>1</button>
-					<button onClick={() => updateCalc("2")}>2</button>
-					<button onClick={() => updateCalc("3")}>3</button>
-					<button onClick={() => updateCalc("-")}>-</button>
-					<button onClick={() => updateCalc(".")}>.</button>
-					<button onClick={() => updateCalc("0")}>0</button>
-					<button onClick={() => updateCalc("/")}>/</button>
-					<button onClick={() => updateCalc("*")}>x</button>
+					<button onClick={() => updateDigit("4")}>4</button>
+					<button onClick={() => updateDigit("5")}>5</button>
+					<button onClick={() => updateDigit("6")}>6</button>
+					<button onClick={() => updateOperator("+")}>+</button>
+					<button onClick={() => updateDigit("1")}>1</button>
+					<button onClick={() => updateDigit("2")}>2</button>
+					<button onClick={() => updateDigit("3")}>3</button>
+					<button onClick={() => updateOperator("-")}>-</button>
+					<button onClick={() => updateDigit(".")}>.</button>
+					<button onClick={() => updateDigit("0")}>0</button>
+					<button onClick={() => updateOperator("/")}>/</button>
+					<button onClick={() => updateOperator("*")}>x</button>
 					<button className={`btn-reset ${theme}-btn-reset`} onClick={reset}>
 						reset
 					</button>
-					<button
-						className={`btn-equal ${theme}-btn-equal`}
-						onClick={calculate}
-					>
+					<button className={`btn-equal ${theme}-btn-equal`} onClick={equal}>
 						=
 					</button>
 				</div>
 			</div>
-			{/* <div className="attribution">
+			<div className="attribution">
 				Challenge by{" "}
 				<a href="https://www.frontendmentor.io?ref=challenge" target="_blank">
 					Frontend Mentor
 				</a>
 				. Coded by <a href="https://lyr01.github.io/">Hamza Khan</a>.
-			</div> */}
+			</div>
 		</main>
 	);
 }
